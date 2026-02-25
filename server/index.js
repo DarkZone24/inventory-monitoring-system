@@ -41,7 +41,7 @@ app.use(express.json());
 
 // Rate Limiting for Login
 const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 3 * 60 * 1000, // 3 minutes
     max: 5, // limit each IP to 5 requests per windowMs
     message: { error: 'Too many login attempts, please try again later' }
 });
