@@ -16,6 +16,7 @@ const Dashboard = () => {
     active_borrowings: 0,
     low_stock: 0,
     total_users: 0,
+    total_stock: 0,
     recent_activity: []
   });
   const [categoryStats, setCategoryStats] = useState([]);
@@ -43,6 +44,7 @@ const Dashboard = () => {
             active_borrowings: data.active_borrowings || 0,
             low_stock: data.low_stock || 0,
             total_users: data.total_users || 0,
+            total_stock: data.total_stock || 0,
             recent_activity: Array.isArray(data.recent_activity) ? data.recent_activity : []
           });
         }
@@ -69,7 +71,7 @@ const Dashboard = () => {
     { label: 'Total Equipment', value: statsData.total_products, icon: Package, color: 'var(--primary)', trend: 'System total' },
     { label: 'Active Borrowings', value: statsData.active_borrowings, icon: Users, color: 'var(--success)', trend: 'Currently Out' },
     { label: 'Low Stock Items', value: statsData.low_stock, icon: TrendingUp, color: 'var(--secondary)', trend: 'Restock needed' },
-    { label: 'Total Users', value: statsData.total_users, icon: AlertCircle, color: 'var(--accent)', trend: 'Active accounts' },
+    { label: 'Total Stock', value: statsData.total_stock, icon: AlertCircle, color: 'var(--accent)', trend: 'Bulk quantity' },
   ];
 
   return (
