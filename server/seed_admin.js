@@ -1,24 +1,26 @@
+const path = require('path');
 const pool = require('./db');
 const bcrypt = require('bcryptjs');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 async function seedAdmin() {
     console.log('--- Seeding Initial Admin User ---');
     try {
         // Check if Admin role exists
-        const [roles] = await pool.query('SELECT id FROM roles WHERE name = "Admin"');
+        const [roles] = await pool.query("SELECT id FROM roles WHERE name = 'Admin'");
         if (roles.length === 0) {
             console.log('Creating Admin role...');
-            await pool.query('INSERT INTO roles (name, can_access_analytics, can_access_inventory) VALUES ("Admin", TRUE, TRUE)');
+            await pool.query("INSERT INTO roles (name, can_access_analytics, can_access_inventory) VALUES ('Admin', TRUE, TRUE)");
         }
 
         // Check if admin user exists
-        const [users] = await pool.query('SELECT id FROM users WHERE email = "admin@tcsnhs.edu.ph"');
+        const [users] = await pool.query("SELECT id FROM users WHERE email = 'admin@tcsnhs.edu.ph'");
         if (users.length === 0) {
             console.log('Creating Admin user...');
             const salt = await bcrypt.genSalt(10);
             const hashedPw = await bcrypt.hash('admin123', salt);
 
-            const [adminRole] = await pool.query('SELECT id FROM roles WHERE name = "Admin"');
+            const [adminRole] = await pool.query("SELECT id FROM roles WHERE name = 'Admin'");
             await pool.query(
                 'INSERT INTO users (name, email, password_hash, role_id, status) VALUES (?, ?, ?, ?, ?)',
                 ['System Admin', 'admin@tcsnhs.edu.ph', hashedPw, adminRole[0].id, 'Active']

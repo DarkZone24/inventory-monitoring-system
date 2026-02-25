@@ -1,5 +1,4 @@
-CREATE DATABASE IF NOT EXISTS modern_ims;
-USE modern_ims;
+-- Database schema for SchoolAsset IMS
 
 -- Roles table
 CREATE TABLE IF NOT EXISTS roles (

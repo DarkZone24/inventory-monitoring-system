@@ -1,7 +1,7 @@
 const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 async function initDB() {
     console.log('--- Initializing Database ---');
@@ -10,13 +10,15 @@ async function initDB() {
             host: process.env.DB_HOST || 'localhost',
             user: process.env.DB_USER || 'root',
             password: process.env.DB_PASSWORD || '',
-            port: 3307,
-            multipleStatements: true
+            port: parseInt(process.env.DB_PORT) || 3306,
+            multipleStatements: true,
+            ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : null
         });
 
-        console.log('Creating database modern_ims...');
-        await connection.query('CREATE DATABASE IF NOT EXISTS modern_ims');
-        await connection.query('USE modern_ims');
+        const dbName = process.env.DB_NAME || 'modern_ims';
+        console.log(`Creating database ${dbName}...`);
+        await connection.query(`CREATE DATABASE IF NOT EXISTS ${dbName}`);
+        await connection.query(`USE ${dbName}`);
 
         console.log('Reading schema.sql...');
         const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');

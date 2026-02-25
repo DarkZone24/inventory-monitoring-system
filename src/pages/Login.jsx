@@ -12,6 +12,8 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    console.log('Submitting login to:', `${API_BASE_URL}/login`);
+    console.log('Payload:', { email, rememberMe });
 
     try {
       const res = await fetch(`${API_BASE_URL}/login`, {
@@ -20,7 +22,9 @@ const Login = () => {
         body: JSON.stringify({ email, password, rememberMe })
       });
 
+      console.log('Response Status:', res.status);
       const data = await res.json();
+      console.log('Response Data:', data);
 
       if (res.ok) {
         localStorage.setItem('user', JSON.stringify(data));
