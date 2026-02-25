@@ -434,7 +434,7 @@ app.put('/api/borrowings/:id/return', authenticateToken, async (req, res) => {
 
         // 2. Mark as returned
         await conn.query(
-            'UPDATE borrowings SET status = "Returned", return_date = NOW() WHERE id = ?',
+            "UPDATE borrowings SET status = 'Returned', return_date = NOW() WHERE id = ?",
             [id]
         );
 
@@ -480,9 +480,9 @@ app.get('/api/analytics/category-stats', authenticateToken, async (req, res) => 
 // Dashboard Stats
 app.get('/api/dashboard/stats', authenticateToken, async (req, res) => {
     try {
-        const [[{ total_products }]] = await pool.query('SELECT SUM(stock_qty) as total_products FROM products');
-        const [[{ active_borrowings }]] = await pool.query('SELECT COUNT(*) as active_borrowings FROM borrowings WHERE status = "Borrowed"');
-        const [[{ low_stock }]] = await pool.query('SELECT COUNT(*) as low_stock FROM products WHERE stock_qty < 5 AND stock_qty > 0');
+        const [[{ total_products }]] = await pool.query('SELECT COUNT(*) as total_products FROM products');
+        const [[{ active_borrowings }]] = await pool.query("SELECT COUNT(*) as active_borrowings FROM borrowings WHERE status = 'Borrowed'");
+        const [[{ low_stock }]] = await pool.query('SELECT COUNT(*) as low_stock FROM products WHERE stock_qty < 10 AND stock_qty > 0');
         const [[{ total_users }]] = await pool.query('SELECT COUNT(*) as total_users FROM users');
         const [[{ total_stock }]] = await pool.query('SELECT SUM(stock_qty) as total_stock FROM products');
 

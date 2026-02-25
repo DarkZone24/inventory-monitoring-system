@@ -32,7 +32,10 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
           <button
             key={item.id}
             className={`menu-item ${activeTab === item.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(item.id)}
+            onClick={() => {
+              setActiveTab(item.id);
+              window.location.hash = `#${item.id}`;
+            }}
           >
             <item.icon size={20} />
             <span>{item.label}</span>

@@ -12,7 +12,21 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
   useEffect(() => {
-    const handleHashChange = () => setCurrentRoute(window.location.hash);
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      setCurrentRoute(hash);
+
+      // Map hash to activeTab
+      const tab = hash.replace('#', '') || 'dashboard';
+      const validTabs = ['dashboard', 'inventory', 'analytics', 'settings'];
+      if (validTabs.includes(tab)) {
+        setActiveTab(tab);
+      }
+    };
+
+    // Initial sync
+    handleHashChange();
+
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
