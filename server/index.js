@@ -139,6 +139,38 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     }
 });
 
+// Change Password Route
+app.post('/api/change-password', authenticateToken, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    try {
+        // 1. Get user from DB
+        const [users] = await pool.query('SELECT password_hash FROM users WHERE id = ?', [userId]);
+        if (users.length === 0) return res.status(404).json({ error: 'User not found' });
+
+        const user = users[0];
+
+        // 2. Verify current password
+        const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Incorrect current password' });
+        }
+
+        // 3. Hash new password
+        const salt = await bcrypt.genSalt(10);
+        const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+        // 4. Update DB
+        await pool.query('UPDATE users SET password_hash = ? WHERE id = ?', [newPasswordHash, userId]);
+
+        res.json({ message: 'Password updated successfully' });
+    } catch (err) {
+        console.error('Change Password Error:', err);
+        res.status(500).json({ error: 'Server error during password change' });
+    }
+});
+
 // Users Routes (Protected - Admin Only)
 app.get('/api/users', authenticateToken, authorizeRoles('Admin'), async (req, res) => {
     try {
