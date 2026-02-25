@@ -388,12 +388,15 @@ const Inventory = () => {
                   </div>
                   <div className="form-group">
                     <label>Category</label>
-                    <select name="category_id" className="input-modern" required>
-                      <option value="">Select Category</option>
-                      {categories.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
+                    <div className="select-wrapper">
+                      <select name="category_id" className="input-modern select-modern" required>
+                        <option value="">Select Category</option>
+                        {categories.map(cat => (
+                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                      </select>
+                      <ChevronDown size={18} className="select-icon" />
+                    </div>
                   </div>
                   <div className="form-group">
                     <label>Initial Stock</label>
@@ -437,12 +440,15 @@ const Inventory = () => {
                   </div>
                   <div className="form-group">
                     <label>Category</label>
-                    <select name="category_id" className="input-modern" defaultValue={categories.find(c => c.name === selectedProduct.category)?.id} required>
-                      <option value="">Select Category</option>
-                      {categories.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
+                    <div className="select-wrapper">
+                      <select name="category_id" className="input-modern select-modern" defaultValue={categories.find(c => c.name === selectedProduct.category)?.id} required>
+                        <option value="">Select Category</option>
+                        {categories.map(cat => (
+                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                      </select>
+                      <ChevronDown size={18} className="select-icon" />
+                    </div>
                   </div>
                   <div className="form-group">
                     <label>Current Stock</label>
