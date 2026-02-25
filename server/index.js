@@ -43,7 +43,8 @@ app.use(express.json());
 const loginLimiter = rateLimit({
     windowMs: 3 * 60 * 1000, // 3 minutes
     max: 5, // limit each IP to 5 requests per windowMs
-    message: { error: 'Too many login attempts, please try again later' }
+    message: { error: 'Too many login attempts, please try again later' },
+    skipSuccessfulRequests: true // Only count failed attempts (4xx/5xx responses)
 });
 
 // Auth Middleware

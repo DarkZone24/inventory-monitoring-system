@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, LogIn, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, LogIn, ShieldCheck, Loader2 } from 'lucide-react';
 import API_BASE_URL from '../apiConfig';
 
 const Login = () => {
@@ -8,10 +8,12 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     console.log('Submitting login to:', `${API_BASE_URL}/login`);
     console.log('Payload:', { email, rememberMe });
 
@@ -35,6 +37,8 @@ const Login = () => {
     } catch (err) {
       console.error('Login Fetch Error:', err);
       setError(`Connection error (${err.message}). Is the server running?`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -112,9 +116,13 @@ const Login = () => {
             <a href="#" className="forgot-password">Forgot password?</a>
           </div>
 
-          <button type="submit" className="btn-primary w-full">
-            <LogIn size={20} className="inline-mr-2" />
-            Sign In
+          <button type="submit" className="btn-primary w-full" disabled={isLoading}>
+            {isLoading ? (
+              <Loader2 size={20} className="inline-mr-2 animate-spin" />
+            ) : (
+              <LogIn size={20} className="inline-mr-2" />
+            )}
+            {isLoading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
 
@@ -123,6 +131,61 @@ const Login = () => {
           <span>Secure Enterprise Access</span>
         </div>
       </motion.div>
+
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="loading-overlay"
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(10, 10, 20, 0.8)',
+              backdropFilter: 'blur(8px)',
+              zIndex: 1000,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '20px'
+            }}
+          >
+            <motion.div
+              animate={{
+                scale: [1, 1.2, 1],
+                rotate: [0, 360],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="logo-glow"
+              style={{ width: '80px', height: '80px', marginBottom: '10px' }}
+            >
+              <img src="/images/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </motion.div>
+            <div className="loading-text">
+              <h2 className="text-gradient" style={{ margin: 0 }}>Authenticating</h2>
+              <div className="dots" style={{ display: 'flex', gap: '5px', justifyContent: 'center', marginTop: '5px' }}>
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.2 }}
+                    style={{ width: '8px', height: '8px', background: '#6366f1', borderRadius: '50%' }}
+                  />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
