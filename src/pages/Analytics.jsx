@@ -10,14 +10,22 @@ import {
     ArrowDownRight,
     Filter,
     Download,
-    Calendar
+    Calendar,
+    FileText,
+    FileJson,
+    FileBox
 } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType } from 'docx';
+import { AnimatePresence } from 'framer-motion';
 import API_BASE_URL from '../apiConfig';
 
 const Analytics = () => {
     const [borrowings, setBorrowings] = useState([]);
     const [categoryStats, setCategoryStats] = useState([]);
     const [inventoryData, setInventoryData] = useState([]);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
     const getAuthHeader = () => {
         const userString = localStorage.getItem('user');
@@ -75,6 +83,104 @@ const Analytics = () => {
         }
     };
 
+    // Export CSV
+    const exportCSV = () => {
+        const headers = ['ID', 'Borrower', 'Product', 'Quantity', 'Date', 'Status'];
+        const rows = borrowings.map(item => [
+            item.id,
+            item.borrower_name,
+            item.product_name,
+            item.quantity,
+            new Date(item.borrow_date).toLocaleDateString(),
+            item.status
+        ]);
+
+        const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `analytics_report_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    // Export PDF
+    const exportPDF = () => {
+        const doc = new jsPDF();
+        doc.text("Analytics Borrowing Report", 14, 15);
+        doc.setFontSize(10);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+
+        const tableColumn = ['ID', 'Borrower', 'Product', 'Quantity', 'Date', 'Status'];
+        const tableRows = borrowings.map(item => [
+            item.id,
+            item.borrower_name,
+            item.product_name,
+            item.quantity,
+            new Date(item.borrow_date).toLocaleDateString(),
+            item.status
+        ]);
+
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 30,
+            theme: 'grid',
+            headStyles: { fillColor: [66, 133, 244] }
+        });
+
+        doc.save(`analytics_report_${new Date().toISOString().slice(0, 10)}.pdf`);
+    };
+
+    // Export DOCX
+    const exportDOCX = async () => {
+        const table = new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+                new TableRow({
+                    children: [
+                        new TableCell({ children: [new Paragraph("ID")] }),
+                        new TableCell({ children: [new Paragraph("Borrower")] }),
+                        new TableCell({ children: [new Paragraph("Product")] }),
+                        new TableCell({ children: [new Paragraph("Quantity")] }),
+                        new TableCell({ children: [new Paragraph("Date")] }),
+                        new TableCell({ children: [new Paragraph("Status")] }),
+                    ],
+                }),
+                ...borrowings.map(item => new TableRow({
+                    children: [
+                        new TableCell({ children: [new Paragraph(item.id.toString())] }),
+                        new TableCell({ children: [new Paragraph(item.borrower_name)] }),
+                        new TableCell({ children: [new Paragraph(item.product_name)] }),
+                        new TableCell({ children: [new Paragraph(item.quantity.toString())] }),
+                        new TableCell({ children: [new Paragraph(new Date(item.borrow_date).toLocaleDateString())] }),
+                        new TableCell({ children: [new Paragraph(item.status)] }),
+                    ],
+                })),
+            ],
+        });
+
+        const doc = new Document({
+            sections: [{
+                children: [
+                    new Paragraph({ text: "Analytics Borrowing Report", heading: "Heading1" }),
+                    new Paragraph({ text: `Generated on: ${new Date().toLocaleString()}` }),
+                    new Paragraph({ text: "" }),
+                    table,
+                ],
+            }],
+        });
+
+        const buffer = await Packer.toBlob(doc);
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(buffer);
+        link.download = `analytics_report_${new Date().toISOString().slice(0, 10)}.docx`;
+        link.click();
+    };
+
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
@@ -100,7 +206,7 @@ const Analytics = () => {
                         <Calendar size={18} />
                         <span>Last 30 Days</span>
                     </button>
-                    <button className="btn-primary">
+                    <button className="btn-primary" onClick={() => setIsExportModalOpen(true)}>
                         <Download size={18} />
                         <span>Export Report</span>
                     </button>
@@ -241,6 +347,57 @@ const Analytics = () => {
                     </div>
                 </section>
             </div>
+
+            <AnimatePresence>
+                {isExportModalOpen && (
+                    <div className="modal-overlay">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="glass-card modal-content"
+                            style={{ maxWidth: '450px' }}
+                        >
+                            <div className="modal-header">
+                                <h3>Export Analytics Report</h3>
+                                <button className="close-btn" onClick={() => setIsExportModalOpen(false)}>&times;</button>
+                            </div>
+                            <div className="modal-body" style={{ padding: '20px' }}>
+                                <p className="text-muted" style={{ marginBottom: '24px' }}>Choose your preferred format for the analytics report. This will include all current borrowing activities.</p>
+                                <div className="export-options-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                                    <button
+                                        className="export-opt-btn glass"
+                                        onClick={() => { exportCSV(); setIsExportModalOpen(false); }}
+                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '20px', borderRadius: '12px', border: '1px solid var(--glass-border)', cursor: 'pointer', transition: 'all 0.3s ease' }}
+                                    >
+                                        <FileJson size={32} style={{ color: 'var(--primary)' }} />
+                                        <span style={{ fontWeight: 600 }}>CSV</span>
+                                    </button>
+                                    <button
+                                        className="export-opt-btn glass"
+                                        onClick={() => { exportPDF(); setIsExportModalOpen(false); }}
+                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '20px', borderRadius: '12px', border: '1px solid var(--glass-border)', cursor: 'pointer', transition: 'all 0.3s ease' }}
+                                    >
+                                        <FileText size={32} style={{ color: 'var(--secondary)' }} />
+                                        <span style={{ fontWeight: 600 }}>PDF</span>
+                                    </button>
+                                    <button
+                                        className="export-opt-btn glass"
+                                        onClick={() => { exportDOCX(); setIsExportModalOpen(false); }}
+                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '20px', borderRadius: '12px', border: '1px solid var(--glass-border)', cursor: 'pointer', transition: 'all 0.3s ease' }}
+                                    >
+                                        <FileBox size={32} style={{ color: 'var(--accent)' }} />
+                                        <span style={{ fontWeight: 600 }}>DOCX</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="modal-footer" style={{ borderTop: 'none' }}>
+                                <button className="btn-outline" style={{ width: '100%' }} onClick={() => setIsExportModalOpen(false)}>Cancel</button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 };
